@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ titulo }} | AgendaPro{% endblock %}
+{% block page_title %}{{ titulo }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-lg-7 col-xl-6">
+
+    <div class="card">
+      <div class="card-header d-flex align-items-center gap-2">
+        <a href="{% url 'cliente_list' %}" class="btn btn-sm btn-outline-secondary">
+          <i class="bi bi-arrow-left"></i>
+        </a>
+        <h6 class="mb-0 fw-semibold">
+          <i class="bi bi-person-{% if cliente %}pencil{% else %}plus{% endif %}-fill me-2 text-primary"></i>
+          {{ titulo }}
+        </h6>
+      </div>
+      <div class="card-body p-4">
+        <form method="post" novalidate>
+          {% csrf_token %}
+
+          <div class="row g-3">
+
+            <div class="col-12 col-sm-6">
+              <label class="form-label fw-semibold small">{{ form.nombre.label }} <span class="text-danger">*</span></label>
+              {{ form.nombre }}
+              {% if form.nombre.errors %}
+                <div class="text-danger small mt-1">{{ form.nombre.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <div class="col-12 col-sm-6">
+              <label class="form-label fw-semibold small">{{ form.apellido.label }} <span class="text-danger">*</span></label>
+              {{ form.apellido }}
+              {% if form.apellido.errors %}
+                <div class="text-danger small mt-1">{{ form.apellido.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <div class="col-12 col-sm-7">
+              <label class="form-label fw-semibold small">{{ form.email.label }} <span class="text-danger">*</span></label>
+              {{ form.email }}
+              {% if form.email.errors %}
+                <div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <div class="col-12 col-sm-5">
+              <label class="form-label fw-semibold small">{{ form.telefono.label }}</label>
+              {{ form.telefono }}
+              {% if form.telefono.errors %}
+                <div class="text-danger small mt-1">{{ form.telefono.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <div class="col-12">
+              <label class="form-label fw-semibold small">{{ form.notas.label }}</label>
+              {{ form.notas }}
+            </div>
+
+          </div>
+
+          <hr class="my-4">
+
+          <div class="d-flex gap-2 justify-content-end">
+            <a href="{% url 'cliente_list' %}" class="btn btn-outline-secondary">
+              <i class="bi bi-x-lg me-1"></i>Cancelar
+            </a>
+            <button type="submit" class="btn btn-primary px-4">
+              <i class="bi bi-check-lg me-1"></i>
+              {% if cliente %}Guardar cambios{% else %}Registrar cliente{% endif %}
+            </button>
+          </div>
+
+        </form>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

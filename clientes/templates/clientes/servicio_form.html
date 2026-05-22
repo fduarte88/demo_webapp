@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ titulo }} | AgendaPro{% endblock %}
+{% block page_title %}{{ titulo }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-lg-6 col-xl-5">
+
+    <div class="card">
+      <div class="card-header d-flex align-items-center gap-2">
+        <a href="{% url 'servicio_list' %}" class="btn btn-sm btn-outline-secondary">
+          <i class="bi bi-arrow-left"></i>
+        </a>
+        <h6 class="mb-0 fw-semibold">
+          <i class="bi bi-briefcase{% if not servicio %}-fill{% endif %} me-2 text-primary"></i>
+          {{ titulo }}
+        </h6>
+      </div>
+      <div class="card-body p-4">
+        <form method="post" novalidate>
+          {% csrf_token %}
+          <div class="row g-3">
+
+            <div class="col-12">
+              <label class="form-label fw-semibold small">{{ form.nombre.label }} <span class="text-danger">*</span></label>
+              {{ form.nombre }}
+              {% if form.nombre.errors %}<div class="text-danger small mt-1">{{ form.nombre.errors.0 }}</div>{% endif %}
+            </div>
+
+            <div class="col-12">
+              <label class="form-label fw-semibold small">{{ form.descripcion.label }}</label>
+              {{ form.descripcion }}
+            </div>
+
+            <div class="col-12 col-sm-6">
+              <label class="form-label fw-semibold small">{{ form.duracion_minutos.label }}</label>
+              <div class="input-group">
+                {{ form.duracion_minutos }}
+                <span class="input-group-text text-muted small">min</span>
+              </div>
+            </div>
+
+            <div class="col-12 col-sm-6">
+              <label class="form-label fw-semibold small">{{ form.precio.label }}</label>
+              <div class="input-group">
+                {{ form.precio }}
+                <span class="input-group-text text-muted fw-semibold">Gs</span>
+              </div>
+              {% if form.precio.errors %}<div class="text-danger small mt-1">{{ form.precio.errors.0 }}</div>{% endif %}
+            </div>
+
+            <div class="col-12">
+              <div class="form-check">
+                {{ form.activo }}
+                <label class="form-check-label fw-semibold small" for="{{ form.activo.id_for_label }}">
+                  {{ form.activo.label }}
+                </label>
+              </div>
+            </div>
+
+          </div>
+
+          <hr class="my-4">
+
+          <div class="d-flex gap-2 justify-content-end">
+            <a href="{% url 'servicio_list' %}" class="btn btn-outline-secondary">
+              <i class="bi bi-x-lg me-1"></i>Cancelar
+            </a>
+            <button type="submit" class="btn btn-primary px-4">
+              <i class="bi bi-check-lg me-1"></i>
+              {% if servicio %}Guardar cambios{% else %}Crear servicio{% endif %}
+            </button>
+          </div>
+
+        </form>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.querySelectorAll('.precio-gs').forEach(function(input) {
+    function formatear(val) {
+      const num = val.replace(/\D/g, '');
+      return num === '' ? '' : parseInt(num, 10).toLocaleString('de-DE');
+    }
+    input.addEventListener('input', function() {
+      const pos = this.selectionStart;
+      const prevLen = this.value.length;
+      this.value = formatear(this.value);
+      const diff = this.value.length - prevLen;
+      this.setSelectionRange(pos + diff, pos + diff);
+    });
+    input.addEventListener('blur', function() {
+      this.value = formatear(this.value);
+    });
+  });
+</script>
+{% endblock %}

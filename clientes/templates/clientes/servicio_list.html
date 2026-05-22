@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% load agenda_filters %}
+
+{% block title %}Servicios | AgendaPro{% endblock %}
+{% block page_title %}Servicios{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header d-flex align-items-center justify-content-between">
+    <h6 class="mb-0 fw-semibold">
+      <i class="bi bi-briefcase-fill me-2 text-primary"></i>Catálogo de servicios
+    </h6>
+    <a href="{% url 'servicio_create' %}" class="btn btn-sm btn-primary">
+      <i class="bi bi-plus-lg me-1"></i><span class="d-none d-sm-inline">Nuevo servicio</span><span class="d-sm-none">Nuevo</span>
+    </a>
+  </div>
+  <div class="card-body p-0">
+    {% if servicios %}
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th class="ps-3">Nombre</th>
+              <th class="d-none d-md-table-cell">Descripción</th>
+              <th class="d-none d-sm-table-cell">Duración</th>
+              <th>Precio</th>
+              <th>Estado</th>
+              <th class="text-end pe-3">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for servicio in servicios %}
+            <tr>
+              <td class="ps-3 fw-semibold small">{{ servicio.nombre }}</td>
+              <td class="d-none d-md-table-cell text-muted small">{{ servicio.descripcion|truncatechars:50|default:"—" }}</td>
+              <td class="d-none d-sm-table-cell small">{{ servicio.duracion_minutos }} min</td>
+              <td class="small">{{ servicio.precio|guaranies }}</td>
+              <td>
+                {% if servicio.activo %}
+                  <span class="badge bg-success">Activo</span>
+                {% else %}
+                  <span class="badge bg-secondary">Inactivo</span>
+                {% endif %}
+              </td>
+              <td class="text-end pe-3">
+                <div class="d-flex gap-1 justify-content-end">
+                  <a href="{% url 'servicio_edit' servicio.pk %}" class="btn btn-sm btn-outline-secondary" title="Editar">
+                    <i class="bi bi-pencil"></i>
+                  </a>
+                  <button type="button" class="btn btn-sm btn-outline-danger"
+                    data-bs-toggle="modal" data-bs-target="#modalEliminar"
+                    data-id="{{ servicio.pk }}" data-nombre="{{ servicio.nombre }}"
+                    title="Eliminar">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="text-center py-5 text-muted">
+        <i class="bi bi-briefcase fs-1 opacity-25 d-block mb-2"></i>
+        No hay servicios registrados.
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Modal confirmar eliminación -->
+<div class="modal fade" id="modalEliminar" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h6 class="modal-title fw-semibold"><i class="bi bi-exclamation-triangle me-2"></i>Eliminar servicio</h6>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body text-center py-3">
+        <p class="mb-1">¿Eliminar el servicio</p>
+        <p class="fw-bold mb-0" id="nombreServicio"></p>
+      </div>
+      <div class="modal-footer justify-content-center">
+        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+        <form method="post" id="formEliminar" style="display:inline;">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger btn-sm">
+            <i class="bi bi-trash me-1"></i>Eliminar
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.getElementById('modalEliminar').addEventListener('show.bs.modal', function(e) {
+    const btn = e.relatedTarget;
+    document.getElementById('nombreServicio').textContent = '"' + btn.dataset.nombre + '"';
+    document.getElementById('formEliminar').action = `/servicios/${btn.dataset.id}/eliminar/`;
+  });
+</script>
+{% endblock %}

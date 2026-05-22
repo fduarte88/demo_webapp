@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ titulo }} | AgendaPro{% endblock %}
+{% block page_title %}{{ titulo }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-lg-7 col-xl-6">
+
+    <div class="card">
+      <div class="card-header d-flex align-items-center gap-2">
+        <a href="{% url 'cita_list' %}" class="btn btn-sm btn-outline-secondary">
+          <i class="bi bi-arrow-left"></i>
+        </a>
+        <h6 class="mb-0 fw-semibold">
+          <i class="bi bi-calendar{% if cita %}-check{% else %}-plus{% endif %}-fill me-2 text-primary"></i>
+          {{ titulo }}
+        </h6>
+      </div>
+      <div class="card-body p-4">
+        <form method="post" novalidate>
+          {% csrf_token %}
+
+          <div class="row g-3">
+
+            <div class="col-12">
+              <label class="form-label fw-semibold small">{{ form.cliente.label }} <span class="text-danger">*</span></label>
+              {{ form.cliente }}
+              {% if form.cliente.errors %}
+                <div class="text-danger small mt-1">{{ form.cliente.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <div class="col-12">
+              <label class="form-label fw-semibold small">{{ form.servicio.label }}</label>
+              {{ form.servicio }}
+            </div>
+
+            <div class="col-12 col-sm-6">
+              <label class="form-label fw-semibold small">{{ form.fecha.label }} <span class="text-danger">*</span></label>
+              {{ form.fecha }}
+              {% if form.fecha.errors %}
+                <div class="text-danger small mt-1">{{ form.fecha.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <div class="col-12 col-sm-6">
+              <label class="form-label fw-semibold small">{{ form.hora.label }} <span class="text-danger">*</span></label>
+              {{ form.hora }}
+              {% if form.hora.errors %}
+                <div class="text-danger small mt-1">{{ form.hora.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <div class="col-12">
+              <label class="form-label fw-semibold small">{{ form.estado.label }}</label>
+              {{ form.estado }}
+            </div>
+
+            <div class="col-12">
+              <label class="form-label fw-semibold small">{{ form.notas.label }}</label>
+              {{ form.notas }}
+            </div>
+
+          </div>
+
+          <hr class="my-4">
+
+          <div class="d-flex gap-2 justify-content-end">
+            <a href="{% url 'cita_list' %}" class="btn btn-outline-secondary">
+              <i class="bi bi-x-lg me-1"></i>Cancelar
+            </a>
+            <button type="submit" class="btn btn-primary px-4">
+              <i class="bi bi-check-lg me-1"></i>
+              {% if cita %}Guardar cambios{% else %}Agendar cita{% endif %}
+            </button>
+          </div>
+
+        </form>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

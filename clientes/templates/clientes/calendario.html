@@ -1,0 +1,243 @@
+{% extends 'base.html' %}
+
+{% block title %}Calendario | AgendaPro{% endblock %}
+{% block page_title %}Calendario de citas{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" rel="stylesheet">
+<style>
+  .fc {
+    font-family: inherit;
+    font-size: 0.875rem;
+  }
+  .fc .fc-toolbar-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+  }
+  .fc .fc-button-primary {
+    background: #2563eb;
+    border-color: #2563eb;
+  }
+  .fc .fc-button-primary:hover,
+  .fc .fc-button-primary:not(:disabled).fc-button-active {
+    background: #1d4ed8;
+    border-color: #1d4ed8;
+  }
+  .fc .fc-daygrid-event {
+    border-radius: 4px;
+    font-size: 0.78rem;
+    padding: 1px 4px;
+  }
+  .fc .fc-col-header-cell-cushion,
+  .fc .fc-daygrid-day-number {
+    color: #374151;
+    text-decoration: none;
+  }
+  .fc .fc-day-today {
+    background: #eff6ff !important;
+  }
+  .fc .fc-daygrid-day:hover {
+    background: #f8fafc;
+    cursor: pointer;
+  }
+
+  /* Modal headers */
+  .modal-header-blue {
+    background: linear-gradient(135deg, #2563eb, #0ea5e9);
+    color: #fff;
+  }
+  .modal-header-blue .btn-close { filter: invert(1); }
+  .modal-header-green {
+    background: linear-gradient(135deg, #059669, #10b981);
+    color: #fff;
+  }
+  .modal-header-green .btn-close { filter: invert(1); }
+
+  .detalle-row {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.4rem 0;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 0.875rem;
+  }
+  .detalle-row:last-child { border-bottom: none; }
+  .detalle-label {
+    width: 90px;
+    color: #6b7280;
+    flex-shrink: 0;
+    font-weight: 500;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header d-flex align-items-center justify-content-between">
+    <h6 class="mb-0 fw-semibold">
+      <i class="bi bi-calendar3 me-2 text-primary"></i>Calendario
+    </h6>
+    <button class="btn btn-sm btn-primary" id="btnNuevaCita">
+      <i class="bi bi-plus-lg me-1"></i><span class="d-none d-sm-inline">Nueva cita</span>
+    </button>
+  </div>
+  <div class="card-body">
+    <div class="d-flex flex-wrap gap-3 mb-3">
+      <span class="d-flex align-items-center gap-1 small">
+        <span style="width:12px;height:12px;border-radius:3px;background:#f59e0b;display:inline-block;"></span> Pendiente
+      </span>
+      <span class="d-flex align-items-center gap-1 small">
+        <span style="width:12px;height:12px;border-radius:3px;background:#10b981;display:inline-block;"></span> Confirmada
+      </span>
+      <span class="d-flex align-items-center gap-1 small">
+        <span style="width:12px;height:12px;border-radius:3px;background:#ef4444;display:inline-block;"></span> Cancelada
+      </span>
+      <span class="text-muted small ms-auto d-none d-md-flex align-items-center">
+        <i class="bi bi-hand-index me-1"></i> Clic en un día para agendar
+      </span>
+    </div>
+    <div id="calendario"></div>
+  </div>
+</div>
+
+<!-- ── Modal: detalle de cita existente ── -->
+<div class="modal fade" id="modalDetalle" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header modal-header-blue">
+        <h6 class="modal-title fw-semibold"><i class="bi bi-calendar-event me-2"></i>Detalle de cita</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="detalleBody"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
+        <a href="#" id="btnEditarCita" class="btn btn-primary btn-sm">
+          <i class="bi bi-pencil me-1"></i>Editar
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal: nueva cita ── -->
+<div class="modal fade" id="modalNuevaCita" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header modal-header-green">
+        <h6 class="modal-title fw-semibold"><i class="bi bi-calendar-plus me-2"></i>Nueva cita</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="post" action="{% url 'cita_create' %}" novalidate>
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{% url 'calendario' %}">
+        <div class="modal-body">
+          <div class="row g-3">
+
+            <div class="col-12 col-sm-6">
+              <label class="form-label fw-semibold small">{{ form.cliente.label }} <span class="text-danger">*</span></label>
+              {{ form.cliente }}
+              {% if form.cliente.errors %}<div class="text-danger small mt-1">{{ form.cliente.errors.0 }}</div>{% endif %}
+            </div>
+
+            <div class="col-12 col-sm-6">
+              <label class="form-label fw-semibold small">{{ form.servicio.label }}</label>
+              {{ form.servicio }}
+            </div>
+
+            <div class="col-12 col-sm-4">
+              <label class="form-label fw-semibold small">{{ form.fecha.label }} <span class="text-danger">*</span></label>
+              {{ form.fecha }}
+              {% if form.fecha.errors %}<div class="text-danger small mt-1">{{ form.fecha.errors.0 }}</div>{% endif %}
+            </div>
+
+            <div class="col-12 col-sm-4">
+              <label class="form-label fw-semibold small">{{ form.hora.label }} <span class="text-danger">*</span></label>
+              {{ form.hora }}
+              {% if form.hora.errors %}<div class="text-danger small mt-1">{{ form.hora.errors.0 }}</div>{% endif %}
+            </div>
+
+            <div class="col-12 col-sm-4">
+              <label class="form-label fw-semibold small">{{ form.estado.label }}</label>
+              {{ form.estado }}
+            </div>
+
+            <div class="col-12">
+              <label class="form-label fw-semibold small">{{ form.notas.label }}</label>
+              {{ form.notas }}
+            </div>
+
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-success btn-sm px-4">
+            <i class="bi bi-check-lg me-1"></i>Agendar cita
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/locales/es.global.min.js"></script>
+<script>
+  const modalDetalle  = new bootstrap.Modal(document.getElementById('modalDetalle'));
+  const modalNueva    = new bootstrap.Modal(document.getElementById('modalNuevaCita'));
+  const inputFecha    = document.querySelector('#modalNuevaCita input[name="fecha"]');
+
+  function abrirModalNueva(fechaStr) {
+    if (fechaStr && inputFecha) inputFecha.value = fechaStr;
+    modalDetalle.hide();
+    modalNueva.show();
+  }
+
+  document.getElementById('btnNuevaCita').addEventListener('click', () => {
+    abrirModalNueva('');
+  });
+
+  const calendar = new FullCalendar.Calendar(document.getElementById('calendario'), {
+    initialView: window.innerWidth < 576 ? 'listWeek' : 'dayGridMonth',
+    locale: 'es',
+    headerToolbar: {
+      left: 'prev,next today',
+      center: 'title',
+      right: 'dayGridMonth,timeGridWeek,listWeek',
+    },
+    buttonText: { today: 'Hoy', month: 'Mes', week: 'Semana', list: 'Lista' },
+    events: '{% url "citas_json" %}',
+
+    dateClick: function(info) {
+      abrirModalNueva(info.dateStr);
+    },
+
+    eventClick: function(info) {
+      const p = info.event.extendedProps;
+      const fecha = info.event.start.toLocaleDateString('es-MX', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+      const hora  = info.event.start.toLocaleTimeString('es-MX', {hour:'2-digit', minute:'2-digit'});
+      document.getElementById('detalleBody').innerHTML = `
+        <div class="detalle-row"><span class="detalle-label">Cliente</span><span class="fw-semibold">${p.cliente}</span></div>
+        <div class="detalle-row"><span class="detalle-label">Fecha</span><span>${fecha}</span></div>
+        <div class="detalle-row"><span class="detalle-label">Hora</span><span>${hora}</span></div>
+        <div class="detalle-row"><span class="detalle-label">Servicio</span><span>${p.servicio}</span></div>
+        <div class="detalle-row"><span class="detalle-label">Estado</span><span class="badge" style="background:${info.event.backgroundColor}">${p.estado}</span></div>
+        ${p.notas ? `<div class="detalle-row"><span class="detalle-label">Notas</span><span>${p.notas}</span></div>` : ''}
+      `;
+      document.getElementById('btnEditarCita').href = p.edit_url;
+      modalDetalle.show();
+    },
+
+    height: 'auto',
+    dayMaxEvents: 3,
+  });
+
+  calendar.render();
+
+  window.addEventListener('resize', () => {
+    if (window.innerWidth < 576 && calendar.view.type !== 'listWeek') {
+      calendar.changeView('listWeek');
+    }
+  });
+</script>
+{% endblock %}
